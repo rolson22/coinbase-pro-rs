@@ -16,7 +16,7 @@ pub struct Subscribe {
     #[serde(rename = "type")]
     pub _type: SubscribeCmd,
     pub product_ids: Vec<String>,
-    pub channels: Vec<Channel>,
+    pub channel: ChannelType,
     #[serde(flatten)]
     pub auth: Option<Auth>,
 }

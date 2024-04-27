@@ -35,11 +35,7 @@ impl WSFeed {
         let subscribe = Subscribe {
             _type: SubscribeCmd::Subscribe,
             product_ids: product_ids.into_iter().map(|x| x.to_string()).collect(),
-            channels: channels
-                .to_vec()
-                .into_iter()
-                .map(|x| Channel::Name(x))
-                .collect::<Vec<_>>(),
+            channel : ChannelType::Level2,
             auth: None,
         };
 
@@ -88,11 +84,7 @@ impl WSFeed {
         let subscribe = Subscribe {
             _type: SubscribeCmd::Subscribe,
             product_ids: product_ids.into_iter().map(|x| x.to_string()).collect(),
-            channels: channels
-                .to_vec()
-                .into_iter()
-                .map(|x| Channel::Name(x))
-                .collect::<Vec<_>>(),
+            channel : ChannelType::Level2,
             auth: Some(auth),
         };
 
@@ -113,11 +105,7 @@ pub trait CBSink: Sink<TMessage, Error = CBError> + Unpin + Send {
         let subscribe = Subscribe {
             _type: SubscribeCmd::Subscribe,
             product_ids: product_ids.into_iter().map(|x| x.to_string()).collect(),
-            channels: channels
-                .to_vec()
-                .into_iter()
-                .map(|x| Channel::Name(x))
-                .collect::<Vec<_>>(),
+            channel : ChannelType::Level2,
             auth,
         };
         let subscribe = serde_json::to_string(&subscribe).unwrap();
