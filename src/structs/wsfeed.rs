@@ -67,16 +67,7 @@ pub(crate) enum InputMessage {
         currencies: Vec<StatusCurrency>
     },
     Ticker(Ticker),
-    Snapshot {
-        product_id: String,
-        bids: Vec<Level2SnapshotRecord>,
-        asks: Vec<Level2SnapshotRecord>,
-    },
-    L2update {
-        product_id: String,
-        changes: Vec<Level2UpdateRecord>,
-        time: DateTime,
-    },
+    Level2(level2),
     LastMatch(Match),
     Received(Received),
     Open(Open),
@@ -116,33 +107,45 @@ pub enum Message {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
-pub enum Level2 {
-    Snapshot {
-        product_id: String,
-        bids: Vec<Level2SnapshotRecord>,
-        asks: Vec<Level2SnapshotRecord>,
-    },
-    L2update {
-        product_id: String,
-        changes: Vec<Level2UpdateRecord>,
-        time: DateTime,
-    },
+#[serde(rename_all = "snake_case")]
+pub enum DataType {
+    L2Data,
+    Snapshot,
 }
 
-impl Level2 {
-    pub fn product_id(&self) -> &str {
-        match self {
-            Level2::Snapshot { product_id, .. } => product_id,
-            Level2::L2update { product_id, .. } => product_id,
-        }
-    }
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy)]
+#[serde(rename_all = "camelCase")]
+pub enum OrderSide {
+    Bid,
+    Offer,
+}
 
-    pub fn time(&self) -> Option<&DateTime> {
-        match self {
-            Level2::Snapshot { .. } => None,
-            Level2::L2update { time, .. } => Some(time),
-        }
-    }
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct Level2UpdateRecord {
+    pub side: OrderSide,
+    #[serde(deserialize_with = "f64_from_string")]
+    pub price_level: f64,
+    #[serde(deserialize_with = "f64_from_string")]
+    pub new_quantity: f64,
+    pub event_time: DateTime,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct Level2Event {
+    #[serde(rename = "type")]
+    pub _type: String,
+    pub product_id: String,
+    pub updates: Vec<Level2UpdateRecord>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct Level2 {
+    pub channel: DataType,
+    pub client_id: String,
+    pub timestamp: DateTime,
+    pub sequence_num: u64,
+    pub events: Vec<Level2Event>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -176,23 +179,6 @@ pub struct StatusCurrency {
     #[serde(deserialize_with = "f64_from_string")]
     pub max_precision: f64,
     pub convertible_to: Vec<String>,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
-pub struct Level2SnapshotRecord {
-    #[serde(deserialize_with = "f64_from_string")]
-    pub price: f64,
-    #[serde(deserialize_with = "f64_from_string")]
-    pub size: f64,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
-pub struct Level2UpdateRecord {
-    pub side: super::reqs::OrderSide,
-    #[serde(deserialize_with = "f64_from_string")]
-    pub price: f64,
-    #[serde(deserialize_with = "f64_from_string")]
-    pub size: f64,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -518,24 +504,7 @@ impl From<InputMessage> for Message {
                 time,
             },
             InputMessage::Ticker(ticker) => Message::Ticker(ticker),
-            InputMessage::Snapshot {
-                product_id,
-                bids,
-                asks,
-            } => Message::Level2(Level2::Snapshot {
-                product_id,
-                bids,
-                asks,
-            }),
-            InputMessage::L2update {
-                product_id,
-                changes,
-                time,
-            } => Message::Level2(Level2::L2update {
-                product_id,
-                changes,
-                time,
-            }),
+            InputMessage::Level2(level2) => Message::Level2(level2),
             InputMessage::Status {
                 currencies,
                 products
