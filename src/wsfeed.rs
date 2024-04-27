@@ -81,8 +81,8 @@ impl WSFeed {
         secret: &str,
     ) -> Result<impl CBStream + CBSink, CBError> {
         let auth = Auth {
-            api_key: key.to_string(),
-            api_secret: secret.to_string(),
+            name: key.to_string(),
+            privateKey: secret.to_string(),
         };
 
         let subscribe = Subscribe {
