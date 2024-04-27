@@ -7,10 +7,8 @@ use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Auth {
-    pub signature: String,
-    pub key: String,
-    pub passphrase: String,
-    pub timestamp: String,
+    pub api_key: String,
+    pub api_secret: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
