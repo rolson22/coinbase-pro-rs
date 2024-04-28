@@ -123,10 +123,10 @@ pub enum OrderSide {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Level2UpdateRecord {
-    pub side: OrderSide,
+    pub side: String,
     pub price_level: f64,
     pub new_quantity: f64,
-    pub event_time: DateTime,
+    pub event_time: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -141,7 +141,7 @@ pub struct Level2Event {
 pub struct Level2Book {
     pub channel: String,
     pub client_id: String,
-    pub timestamp: DateTime,
+    pub timestamp: String,
     pub sequence_num: u64,
     pub events: Vec<Level2Event>,
 }
