@@ -111,7 +111,9 @@ pub enum Message {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub enum DataType {
+    #[serde(rename = "update")]
     Update,
+    #[serde(rename = "snapshot")]
     Snapshot,
 }
 
