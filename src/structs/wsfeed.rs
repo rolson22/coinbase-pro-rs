@@ -141,7 +141,7 @@ pub struct Level2Event {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Level2Book {
-    pub channel: DataType,
+    pub channel: String,
     pub client_id: String,
     pub timestamp: DateTime,
     pub sequence_num: u64,
