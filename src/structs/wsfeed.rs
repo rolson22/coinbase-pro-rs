@@ -67,7 +67,7 @@ pub(crate) enum InputMessage {
         currencies: Vec<StatusCurrency>
     },
     Ticker(Ticker),
-    Level2(level2),
+    Level2(Level2Book),
     LastMatch(Match),
     Received(Received),
     Open(Open),
@@ -97,7 +97,7 @@ pub enum Message {
         currencies: Vec<StatusCurrency>
     },
     Ticker(Ticker),
-    Level2(Level2),
+    Level2(Level2Book),
     Match(Match),
     Full(Full),
     Error {
@@ -140,7 +140,7 @@ pub struct Level2Event {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
-pub struct Level2 {
+pub struct Level2Book {
     pub channel: DataType,
     pub client_id: String,
     pub timestamp: DateTime,
