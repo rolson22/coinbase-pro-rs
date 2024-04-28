@@ -127,7 +127,9 @@ pub enum OrderSide {
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Level2UpdateRecord {
     pub side: String,
+    #[serde(deserialize_with = "f64_from_string")]
     pub price_level: f64,
+    #[serde(deserialize_with = "f64_from_string")]
     pub new_quantity: f64,
     pub event_time: String,
 }
