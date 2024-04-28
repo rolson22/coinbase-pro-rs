@@ -110,9 +110,8 @@ pub enum Message {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
-#[serde(rename_all = "snake_case")]
 pub enum DataType {
-    L2Data,
+    Update,
     Snapshot,
 }
 
@@ -126,7 +125,7 @@ pub enum OrderSide {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Level2UpdateRecord {
-    pub side: String,
+    pub side: OrderSide,
     #[serde(deserialize_with = "f64_from_string")]
     pub price_level: f64,
     #[serde(deserialize_with = "f64_from_string")]
@@ -137,7 +136,7 @@ pub struct Level2UpdateRecord {
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Level2Event {
     #[serde(rename = "type")]
-    pub _type: String,
+    pub _type: DataType,
     pub product_id: String,
     pub updates: Vec<Level2UpdateRecord>,
 }
