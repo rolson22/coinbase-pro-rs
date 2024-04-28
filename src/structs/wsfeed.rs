@@ -145,7 +145,7 @@ pub struct Level2Event {
 pub struct Level2Book {
     pub channel: String,
     pub client_id: String,
-    pub timestamp: String,
+    pub timestamp: DateTime,
     pub sequence_num: u64,
     pub events: Vec<Level2Event>,
 }
