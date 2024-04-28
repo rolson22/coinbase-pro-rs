@@ -2,7 +2,9 @@ use super::DateTime;
 use crate::utils::{
     f64_from_string, f64_nan_from_string, f64_opt_from_string, uuid_opt_from_string,
 };
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{de, Deserialize, Deserializer, Serialize};
+use serde::de::{MapAccess, Visitor};
+use serde_json::Value;
 use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -81,7 +83,7 @@ pub(crate) enum InputMessage {
     InternalError(crate::CBError), // in futures 0.3 probably TryStream
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum Message {
     Subscriptions {
         channels: Vec<Channel>,
@@ -486,49 +488,24 @@ pub enum StopType {
     Exit,
 }
 
-impl From<InputMessage> for Message {
-    fn from(msg: InputMessage) -> Self {
-        match msg {
-            InputMessage::Subscriptions { channels } => Message::Subscriptions { channels },
-            InputMessage::Heartbeat {
-                sequence,
-                last_trade_id,
-                product_id,
-                time,
-            } => Message::Heartbeat {
-                sequence,
-                last_trade_id,
-                product_id,
-                time,
-            },
-            InputMessage::Ticker(ticker) => Message::Ticker(ticker),
-            InputMessage::Level2(level2) => Message::Level2(level2),
-            InputMessage::Status {
-                currencies,
-                products
-            } => Message::Status {
-                currencies,
-                products
-            },
-            InputMessage::LastMatch(_match) => Message::Match(_match),
-            InputMessage::Received(_match) => Message::Full(Full::Received(_match)),
-            InputMessage::Open(open) => Message::Full(Full::Open(open)),
-            InputMessage::Done(done) => Message::Full(Full::Done(done)),
-            InputMessage::Match(_match) => Message::Full(Full::Match(_match)),
-            InputMessage::Change(change) => Message::Full(Full::Change(change)),
-            InputMessage::Activate(activate) => Message::Full(Full::Activate(activate)),
-            InputMessage::Error { message } => Message::Error { message },
-            InputMessage::InternalError(err) => Message::InternalError(err),
-        }
-    }
-}
-
 impl<'de> Deserialize<'de> for Message {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
+        where
+            D: Deserializer<'de>,
     {
-        Deserialize::deserialize(deserializer).map(|input_msg: InputMessage| input_msg.into())
+        let json_value = Value::deserialize(deserializer)?;
+
+        if let Ok(ticker) = serde_json::from_value::<Ticker>(json_value.clone()) {
+            return Ok(Message::Ticker(ticker));
+        }
+
+        if let Ok(level2) = serde_json::from_value::<Level2Book>(json_value.clone()) {
+            return Ok(Message::Level2(level2));
+        }
+
+
+        // If none of the deserializations were successful, return an error
+        Err(de::Error::custom("Unknown message type"))
     }
 }
 
