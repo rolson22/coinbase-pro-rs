@@ -1,3 +1,4 @@
+use log::info;
 use super::DateTime;
 use crate::utils::{
     f64_from_string, f64_nan_from_string, f64_opt_from_string, uuid_opt_from_string,
@@ -499,9 +500,13 @@ impl<'de> Deserialize<'de> for Message {
             return Ok(Message::Ticker(ticker));
         }
 
-        if let Ok(level2) = serde_json::from_value::<Level2Book>(json_value.clone()) {
-            return Ok(Message::Level2(level2));
+        match serde_json::from_value::<Level2Book>(json_value.clone()) {
+            Ok(level2) => return Ok(Message::Level2(level2)),
+            Err(err) => {
+                info!("Error deserializing Level2: {:?}", err);
+            }
         }
+
 
 
         // If none of the deserializations were successful, return an error
