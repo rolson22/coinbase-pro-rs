@@ -56,19 +56,9 @@ pub enum ChannelType {
 #[serde(tag = "type")]
 #[serde(rename_all = "snake_case")]
 pub(crate) enum InputMessage {
-    Subscriptions {
-        channels: Vec<Channel>,
-    },
-    Heartbeat {
-        sequence: usize,
-        last_trade_id: usize,
-        product_id: String,
-        time: DateTime,
-    },
-    Status {
-        products: Vec<StatusProduct>,
-        currencies: Vec<StatusCurrency>
-    },
+    Subscriptions(Subscriptions),
+    Heartbeat(Heartbeat),
+    Status(Status),
     Ticker(Ticker),
     Level2(Level2Book),
     LastMatch(Match),
@@ -84,28 +74,22 @@ pub(crate) enum InputMessage {
     InternalError(crate::CBError), // in futures 0.3 probably TryStream
 }
 
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct Error {
+    pub message: String
+}
+
 #[derive(Debug)]
 pub enum Message {
-    Subscriptions {
-        channels: Vec<Channel>,
-    },
-    Heartbeat {
-        sequence: usize,
-        last_trade_id: usize,
-        product_id: String,
-        time: DateTime,
-    },
-    Status {
-        products: Vec<StatusProduct>,
-        currencies: Vec<StatusCurrency>
-    },
+    Subscriptions(Subscriptions),
+    Heartbeat(Heartbeat),
+    Status(Status),
     Ticker(Ticker),
     Level2(Level2Book),
     Match(Match),
     Full(Full),
-    Error {
-        message: String,
-    },
+    Error(message),
+    Response(Response),
     InternalError(crate::CBError), // in futures 0.3 probably TryStream
 }
 
@@ -141,6 +125,25 @@ pub struct Level2Event {
     pub _type: DataType,
     pub product_id: String,
     pub updates: Vec<Level2UpdateRecord>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct Subscriptions {
+    pub channels: Vec<Channel>
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct Heartbeat {
+    pub sequence: usize,
+    pub last_trade_id: usize,
+    pub product_id: String,
+    pub time: DateTime,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct Status {
+    pub products: Vec<StatusProduct>,
+    pub currencies: Vec<StatusCurrency>
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -492,6 +495,26 @@ pub enum StopType {
     Exit,
 }
 
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct SubscriptionsEvent {
+    pub level2: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[serde(untagged)]
+pub struct ResponseEvent {
+    pub subscriptions: SubscriptionsEvent
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct Response {
+    pub channel: ChannelType,
+    pub client_id: String,
+    pub timestamp: DateTime,
+    pub sequence_num: usize,
+    pub events: Vec<ResponseEvent>,
+}
+
 impl<'de> Deserialize<'de> for Message {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where
@@ -499,8 +522,28 @@ impl<'de> Deserialize<'de> for Message {
     {
         let json_value = Value::deserialize(deserializer)?;
 
+        if let Ok(res) = serde_json::from_value::<Response>(json_value.clone()) {
+            return Ok(Message::Response(res));
+        }
+
         if let Ok(ticker) = serde_json::from_value::<Ticker>(json_value.clone()) {
             return Ok(Message::Ticker(ticker));
+        }
+
+        if let Ok(error) = serde_json::from_value::<Error>(json_value.clone()) {
+            return Ok(Message::Error(error));
+        }
+
+        if let Ok(subscriptions) = serde_json::from_value::<Subscriptions>(json_value.clone()) {
+            return Ok(Message::Subscriptions(subscriptions));
+        }
+
+        if let Ok(heartbeat) = serde_json::from_value::<Heartbeat>(json_value.clone()) {
+            return Ok(Message::Heartbeat(heartbeat));
+        }
+
+        if let Ok(status) = serde_json::from_value::<Status>(json_value.clone()) {
+            return Ok(Message::Status(status));
         }
 
         match serde_json::from_value::<Level2Book>(json_value.clone()) {
