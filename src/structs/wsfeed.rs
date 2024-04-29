@@ -88,7 +88,7 @@ pub enum Message {
     Level2(Level2Book),
     Match(Match),
     Full(Full),
-    Error(message),
+    Error(Error),
     Response(Response),
     InternalError(crate::CBError), // in futures 0.3 probably TryStream
 }
@@ -510,7 +510,7 @@ pub struct Response {
     pub channel: ChannelType,
     pub client_id: String,
     pub timestamp: DateTime,
-    pub sequence_num: usize,
+    pub sequence_num: u64,
     pub events: Vec<ResponseEvent>,
 }
 
