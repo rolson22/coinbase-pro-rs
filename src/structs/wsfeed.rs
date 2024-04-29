@@ -507,7 +507,7 @@ pub struct ResponseEvent {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Response {
-    pub channel: ChannelType,
+    pub channel: String,
     pub client_id: String,
     pub timestamp: DateTime,
     pub sequence_num: u64,
