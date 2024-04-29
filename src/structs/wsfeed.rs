@@ -501,7 +501,6 @@ pub struct SubscriptionsEvent {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
-#[serde(untagged)]
 pub struct ResponseEvent {
     pub subscriptions: SubscriptionsEvent
 }
