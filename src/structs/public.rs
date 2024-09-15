@@ -136,16 +136,17 @@ impl BookLevel for BookRecordL3 {
 pub struct Ticker {
     pub trade_id: usize,
     #[serde(deserialize_with = "f64_from_string")]
+    pub product_id: String,
     pub price: f64,
     #[serde(deserialize_with = "f64_from_string")]
     pub size: f64,
     #[serde(deserialize_with = "f64_from_string")]
-    pub bid: f64,
-    #[serde(deserialize_with = "f64_from_string")]
-    pub ask: f64,
-    #[serde(deserialize_with = "f64_from_string")]
-    pub volume: f64,
     pub time: DateTime,
+    pub best_bid: f64,
+    #[serde(deserialize_with = "f64_from_string")]
+    pub best_ask: f64,
+    #[serde(deserialize_with = "f64_from_string")]
+    pub side: super::reqs::OrderSide,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
